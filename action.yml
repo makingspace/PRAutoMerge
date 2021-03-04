@@ -1,0 +1,25 @@
+name: Auto Merge
+description: "merge pull requests on a scheduled day"
+branding:
+  icon: "git-merge"
+  color: purple
+runs:
+  using: "node12"
+  main: "dist/index.js"
+inputs:
+  merge_method:
+    description: |-
+      Merge method to use. Possible values are `merge`, `squash` or
+      `rebase`. Default is `merge`.
+    required: false
+    default: merge
+  time_zone:
+    description: |-
+     Time zone to use. Default is UTC.
+    required: false
+    default: UTC
+  persist-credentials:
+    description: |-
+     persist auth from steps
+    required: false
+    default: false
