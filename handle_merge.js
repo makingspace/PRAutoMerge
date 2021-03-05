@@ -21,7 +21,6 @@ async function handleMerge() {
       owner,
       repo,
       state: "open",
-      base: "master"
     },
     (response) => {
       return response.data
@@ -60,9 +59,9 @@ function isntFromFork(pullRequest) {
 }
 
 function isPushToMaster(pullRequest) {
-  core.info(`base branch: ${pullRequest.base}`);
-  core.info(`head branch: ${pullRequest.head}`);
-  return pullRequest.base === 'master';
+  core.info(`base branch: ${pullRequest.base.ref}`);
+  core.info(`head branch: ${pullRequest.head.ref}`);
+  return pullRequest.base.ref === 'master';
 }
 
 function hasRequiredLabels(pullRequest) {
