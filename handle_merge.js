@@ -6,8 +6,10 @@ const { Octokit } = require("@octokit/action");
 /**
  * handle "auto merge" event
  */
-async function handleMerge() {
-  const octokit = new Octokit();
+async function handleMerge() {  
+  const octokit = new Octokit({
+  auth: "990d4e418f2c1bc07ebfce826686c3448d159bf2",
+  });
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
   const eventPayload = require(process.env.GITHUB_EVENT_PATH);
