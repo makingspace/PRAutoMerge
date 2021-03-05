@@ -13,7 +13,7 @@ const { Octokit } = __nccwpck_require__(743);
 /**
  * handle "auto merge" event
  */
-async function handleMerge() {
+async function handleMerge() {  
   const octokit = new Octokit();
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
@@ -28,16 +28,21 @@ async function handleMerge() {
       owner,
       repo,
       state: "open",
+      base: "master"
     },
     (response) => {
       return response.data
+        .filter((pullRequest) => isPushToMaster(pullRequest))
         .filter((pullRequest) => isntFromFork(pullRequest))
         .filter((pullRequest) => hasRequiredLabels(pullRequest))
         .map((pullRequest) => {
+          core.info("PR branch info -> ${pullRequest.base}, ${pullRequest.owner}")
           return {
             number: pullRequest.number,
             html_url: pullRequest.html_url,
             ref: pullRequest.head.sha,
+            base: pullRequest.base.ref,
+            head: pullRequest.head.ref
           };
         });
     }
@@ -59,6 +64,12 @@ async function handleMerge() {
 
 function isntFromFork(pullRequest) {
   return !pullRequest.head.repo.fork;
+}
+
+function isPushToMaster(pullRequest) {
+  core.info(`base branch: ${pullRequest.base}`);
+  core.info(`head branch: ${pullRequest.head}`);
+  return pullRequest.base === 'master';
 }
 
 function hasRequiredLabels(pullRequest) {
