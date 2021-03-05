@@ -7,9 +7,7 @@ const { Octokit } = require("@octokit/action");
  * handle "auto merge" event
  */
 async function handleMerge() {  
-  const octokit = new Octokit({
-  auth: "990d4e418f2c1bc07ebfce826686c3448d159bf2",
-  });
+  const octokit = new Octokit();
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
   const eventPayload = require(process.env.GITHUB_EVENT_PATH);
@@ -23,9 +21,12 @@ async function handleMerge() {
       owner,
       repo,
       state: "open",
+      base: "master",
+      head: "develop"
     },
     (response) => {
       return response.data
+        .filter((pullRequest) => isPushToMaster(pullRequest))
         .filter((pullRequest) => isntFromFork(pullRequest))
         .filter((pullRequest) => hasRequiredLabels(pullRequest))
         .map((pullRequest) => {
@@ -55,6 +56,10 @@ async function handleMerge() {
 
 function isntFromFork(pullRequest) {
   return !pullRequest.head.repo.fork;
+}
+
+function isPushToMaster(pullRequest) {
+  return pullRequest.base.ref === 'master';
 }
 
 function hasRequiredLabels(pullRequest) {
