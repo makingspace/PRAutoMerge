@@ -23,3 +23,11 @@ inputs:
      persist auth from steps
     required: false
     default: false
+  base_branch:
+    description: 'Define base branch'     
+    required: false
+    default: 'master'
+  head_branch:
+    description: 'Define head branch'     
+    required: false
+    default: 'develop'
