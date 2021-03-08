@@ -13,6 +13,9 @@ async function handleMerge() {
   const eventPayload = require(process.env.GITHUB_EVENT_PATH);
 
   const mergeMethod = process.env.INPUT_MERGE_METHOD
+  
+  const baseBranch = process.env.INPUT_BASE_BRANCH
+  const headBranch = process.env.INPUT_HEAD_BRANCH
 
   core.info(`Loading open pull requests`);
   const pullRequests = await octokit.paginate(
@@ -24,7 +27,7 @@ async function handleMerge() {
     },
     (response) => {
       return response.data
-        .filter((pullRequest) => isPushToMaster(pullRequest))
+        .filter((pullRequest) => isMergingFromHeadToBase(pullRequest, baseBranch, headBranch))
         .filter((pullRequest) => isntFromFork(pullRequest))
         .filter((pullRequest) => hasRequiredLabels(pullRequest))
         .map((pullRequest) => {
@@ -58,10 +61,10 @@ function isntFromFork(pullRequest) {
   return !pullRequest.head.repo.fork;
 }
 
-function isPushToMaster(pullRequest) {
+function isMergingFromHeadToBase(pullRequest, baseBranch, headBranch) {
   core.info(`base branch: ${pullRequest.base.ref}`);
   core.info(`head branch: ${pullRequest.head.ref}`);
-  return pullRequest.base.ref === 'master';
+  return pullRequest.base.ref === baseBranch && pullRequest.head.ref === headBranch;
 }
 
 function hasRequiredLabels(pullRequest) {
