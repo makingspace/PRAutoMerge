@@ -34,7 +34,7 @@ async function handleMerge() {
         .filter((pullRequest) => isntFromFork(pullRequest))
         .filter((pullRequest) => hasRequiredLabels(pullRequest))
         .map((pullRequest) => {
-          core.info("PR branch info -> ${pullRequest.base}, ${pullRequest.owner}")
+          core.info("PR branch info -> ${pullRequest.base.ref}, ${pullRequest.owner}")
           return {
             number: pullRequest.number,
             html_url: pullRequest.html_url,
@@ -60,10 +60,13 @@ async function handleMerge() {
     
     // make sure there is no other combination of x.x.x before the actual version number
     const tagName = prTitle.match(/\d+\.\d+\.\d+/);
+    core.info(`tag name: ${tagName}`);
+    core.info(`pr title: ${prTitle}`);
+    core.info(`pr body: ${prBody}`);
     await octokit.repos.createRelease({
       owner,
       repo,
-      tag_name: tagName,
+      tag_name: "${tagName}",
       name: prTitle,
       body: prBody
     });
