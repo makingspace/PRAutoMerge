@@ -9,11 +9,10 @@ const { Octokit } = require("@octokit/action");
 async function handleMerge() {  
   const octokit = new Octokit();
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
-
   const eventPayload = require(process.env.GITHUB_EVENT_PATH);
-
-  const mergeMethod = process.env.INPUT_MERGE_METHOD
-
+  const mergeMethod = process.env.INPUT_MERGE_METHOD;
+  const prBody = process.env.PULL_REQUEST_BODY || "No decription.";
+  const prTitle = process.env.PULL_REQUEST_TITLE || "No title.";
   core.info(`Loading open pull requests`);
   const pullRequests = await octokit.paginate(
     "GET /repos/:owner/:repo/pulls",
@@ -51,6 +50,19 @@ async function handleMerge() {
     });
       
     core.info(`${pullRequest.html_url} merged`);
+    
+    // make sure there is no other combination of x.x.x before the actual version number
+    const tagName = prTitle.match(/\d+\.\d+\.\d+/);
+    await octokit.repos.createRelease({
+      owner,
+      repo,
+      tag_name: tagName,
+      name: prTitle,
+      body: prBody
+    });
+    core.info(`release ${tagName} created for ${prTitle}`);
+    core.info(`release note:`);
+    core.info(prBody);
   }
 }
 
