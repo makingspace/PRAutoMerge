@@ -61,10 +61,14 @@ async function handleMerge() {
     const tagName = pullRequest.title.match(/\d+\.\d+\.\d+/);
     // return match for any block of description in PR between **ReleaseNote** and **EndOfReleaseNote**
     const prBody = pullRequest.body.match(/\*\*ReleaseNote\*\*[^]*\*\*EndOfReleaseNote\*\*/)[0] || "empty body";
+      core.info(`tag name: ${tagName}, ${tagName[0]}`);
+      core.info(tagName);
+      core.info("PR title: ${pullRequest.title}");
+      core.info(prBody);
     await octokit.repos.createRelease({
       owner,
       repo,
-      tag_name: "${tagName}",
+      tag_name: tagName,
       name: pullRequest.title,
       body: prBody
     });
