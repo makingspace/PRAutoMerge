@@ -51,12 +51,13 @@ async function handleMerge() {
     core.info(`${pullRequest.html_url} merged`);
     
     // make sure there is no other combination of x.x.x before the actual version number
-    const tagName = pullRequest.title.match(/\d+\.\d+\.\d+/);
+    const tagName = pullRequest.title.match(/\d+\.\d+\.\d+/)[0];
     // return match for any block of description in PR between **ReleaseNote** and **EndOfReleaseNote**
     const prBody = pullRequest.body.match(/\*\*ReleaseNote\*\*[^]*\*\*EndOfReleaseNote\*\*/)[0] || "empty body";
-      core.info(`tag name: ${tagName}, ${tagName[0]}`);
+      core.info(`tag name: ${tagName}`);
       core.info(tagName);
-      core.info("PR title: ${pullRequest.title}");
+      core.info(pullRequest.title);
+      core.info(`PR title: ${pullRequest.title}`);
       core.info(prBody);
     await octokit.repos.createRelease({
       owner,
