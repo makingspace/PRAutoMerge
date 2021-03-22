@@ -48,6 +48,7 @@ async function handleMerge() {
   core.info(`${pullRequests.length} scheduled pull requests found`);
   
   for await (const pullRequest of pullRequests) {
+    core.info(`---------------Merging PR----------------`);
     await octokit.pulls.merge({
       owner,
       repo,
@@ -56,16 +57,12 @@ async function handleMerge() {
     });
       
     core.info(`${pullRequest.html_url} merged`);
-    
+      
+    core.info(`---------------Tagging Release----------------`);
     // make sure there is no other combination of x.x.x before the actual version number
     const tagName = pullRequest.title.match(/\d+\.\d+\.\d+/)[0];
     // return match for any block of description in PR between **ReleaseNote** and **EndOfReleaseNote**
     const prBody = pullRequest.body.match(/\*\*ReleaseNote\*\*[^]*\*\*EndOfReleaseNote\*\*/)[0] || "empty body";
-      core.info(`tag name: ${tagName}`);
-      core.info(tagName);
-      core.info(pullRequest.title);
-      core.info(`PR title: ${pullRequest.title}`);
-      core.info(prBody);
     await octokit.repos.createRelease({
       owner,
       repo,
@@ -74,7 +71,6 @@ async function handleMerge() {
       body: prBody
     });
     core.info(`release ${tagName} created for ${pullRequest.title}`);
-    core.info(`release note:`);
     core.info(prBody);
   }
 }
