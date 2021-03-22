@@ -11,8 +11,6 @@ async function handleMerge() {
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
   const eventPayload = require(process.env.GITHUB_EVENT_PATH);
   const mergeMethod = process.env.INPUT_MERGE_METHOD;
-  const prBody = process.env.PULL_REQUEST_BODY || "No decription.";
-  const prTitle = process.env.PULL_REQUEST_TITLE || "No title.";
   core.info(`Loading open pull requests`);
   const pullRequests = await octokit.paginate(
     "GET /repos/:owner/:repo/pulls",
@@ -27,8 +25,9 @@ async function handleMerge() {
         .filter((pullRequest) => isntFromFork(pullRequest))
         .filter((pullRequest) => hasRequiredLabels(pullRequest))
         .map((pullRequest) => {
-          core.info("PR branch info -> ${pullRequest.base.ref}, ${pullRequest.owner}")
           return {
+            title: pullRequest.title || "No title",
+            body: pullRequest.body || "No decription",
             number: pullRequest.number,
             html_url: pullRequest.html_url,
             ref: pullRequest.head.sha,
@@ -52,9 +51,11 @@ async function handleMerge() {
     core.info(`${pullRequest.html_url} merged`);
     
     // make sure there is no other combination of x.x.x before the actual version number
-    const tagName = prTitle.match(/\d+\.\d+\.\d+/);
+    const tagName = pullRequest.title.match(/\d+\.\d+\.\d+/);
+//    const prBody = pullRequest.body.match(/(?sm)^\*\*Release Note\*\*.*?\n\t*\*\*End of Release Note\*\*\n*\t*/);
+    const prBody = pullRequest.body.match(/\*\*ReleaseNote\*\*[^]*\*\*EndOfReleaseNote\*\*/)
     core.info(`tag name: ${tagName}`);
-    core.info(`pr title: ${prTitle}`);
+    core.info(`pr title: ${pullRequest.title}`);
     core.info(`pr body: ${prBody}`);
     await octokit.repos.createRelease({
       owner,
@@ -63,7 +64,7 @@ async function handleMerge() {
       name: prTitle,
       body: prBody
     });
-    core.info(`release ${tagName} created for ${prTitle}`);
+    core.info(`release ${tagName} created for ${pullRequest.title}`);
     core.info(`release note:`);
     core.info(prBody);
   }
@@ -74,6 +75,7 @@ function isntFromFork(pullRequest) {
 }
 
 function isMergingFromHeadToBase(pullRequest) {
+  core.info(`***${pullRequest.html_url}***`);
   core.info(`base branch: ${pullRequest.base.ref}`);
   core.info(`head branch: ${pullRequest.head.ref}`);
   return pullRequest.base.ref === 'master' && pullRequest.head.ref === 'develop';
@@ -86,6 +88,6 @@ function hasRequiredLabels(pullRequest) {
         core.info(`${pullRequest.html_url} can be merged`);
         return true;
     }
-    core.info(`${pullRequest.html_url} cannont be merged`);
+    core.info(`${pullRequest.html_url} cannot be merged`);
     return false;
 }
